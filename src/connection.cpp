@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""
@@ -8,6 +9,7 @@
 #define TB_MQTT_SERVER ""
 #define TB_MQTT_PORT 0
 #define TB_DEVICE_TOKEN ""
+#define TELEMETRY_ROUTE "v1/devices/me/telemtry"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -46,4 +48,13 @@ void checkMQTTConnection() {
             Serial.print(client.state());
         }
     }
+}
+
+void publishTelemetry(DynamicJsonDocument data) {
+    char buffer[256];
+    serializeJson(data, buffer);
+    client.publish(TELEMETRY_ROUTE, buffer);
+
+    Serial.println("Publish message [telemetry]: ");
+    Serial.print(buffer);
 }
