@@ -1,5 +1,7 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include "pins.h"
+#include "connection.h"
 #include "accelerator.h"
 // tests
 #include "pot_test.h"
@@ -9,7 +11,10 @@
 
 void setup() {
   // Initialize serial communication
-  Serial.begin(9600);
+  Serial.begin(115200);
+  
+  setupWifi();
+  setupMQTTConnection();
 
   // Initialize pins
   pinMode(ACCELERATOR_PIN, INPUT);
@@ -26,6 +31,9 @@ void loop() {
 
     return;
   }
+
+  checkMQTTConnection();
+
   float motorSpeed = analogRead(ENCODER_PIN);
 
   bool isSeatbeltOn = digitalRead(SEATBELT_PIN);
