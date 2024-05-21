@@ -20,9 +20,9 @@ void setup() {
   pinMode(ACCELERATOR_PIN, INPUT);
   // pinMode(BREAK_PIN, INPUT);
   // pinMode(TEMPERATURE_PIN, INPUT);
-  pinMode(SEATBELT_PIN, INPUT);
-  pinMode(MOTOR_PIN, OUTPUT);
-  pinMode(ENCODER_PIN, INPUT);
+  // pinMode(SEATBELT_PIN, INPUT);
+  // pinMode(MOTOR_PIN, OUTPUT);
+  // pinMode(ENCODER_PIN, INPUT);
 }
 
 void loop() {
@@ -34,20 +34,24 @@ void loop() {
 
   checkMQTTConnection();
 
-  float motorSpeed = analogRead(ENCODER_PIN);
+  // float motorSpeed = analogRead(ENCODER_PIN);
 
-  bool isSeatbeltOn = digitalRead(SEATBELT_PIN);
+  // bool isSeatbeltOn = digitalRead(SEATBELT_PIN);
 
-  if (!isSeatbeltOn && motorSpeed < 0.1) {
-    return;
-  }
+  // if (!isSeatbeltOn && motorSpeed < 0.1) {
+  //   return;
+  // }
 
-  if (!isSeatbeltOn && motorSpeed > 0.1) {
-    //displayAlarm();
-    //sendAlarm();
-  }
+  // if (!isSeatbeltOn && motorSpeed > 0.1) {
+  //   //displayAlarm();
+  //   //sendAlarm();
+  // }
 
   float acceleratorValue = getAcceleratorValue8Bits();
+  DynamicJsonDocument data(256);
+  data["pot"] = acceleratorValue;
 
-  analogWrite(MOTOR_PIN, acceleratorValue);
+  publishTelemetry(data);
+  // analogWrite(MOTOR_PIN, acceleratorValue);
+  delay(1000);
 }
