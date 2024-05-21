@@ -3,15 +3,6 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-#ifndef ENV_VARIABLES
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
-
-#define TB_MQTT_SERVER ""
-#define TB_MQTT_PORT 0
-#define TB_DEVICE_TOKEN ""
-#endif
-
 #define TELEMETRY_ROUTE "v1/devices/me/telemetry"
 
 WiFiClient espClient;
