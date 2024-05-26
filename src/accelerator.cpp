@@ -4,7 +4,7 @@
 
 float getAcceleratorValue8Bits() {
     float initialValue = analogRead(ACCELERATOR_PIN);
-    float convertedValue = initialValue * (255.0/1023.0);
+    float convertedValue = initialValue * (255.0/4095.0);
 
     return convertedValue;
 }
