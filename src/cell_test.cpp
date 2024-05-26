@@ -1,8 +1,9 @@
 #include "cell_test.h"
 #include <Arduino.h>
 #include "pins.h"
+#include "HX711.h"
 
-void testCell() {
+void testCell(HX711 scale) {
   if (scale.is_ready()) {
     scale.set_scale();    
     Serial.println("Tare... remove any weights from the scale.");

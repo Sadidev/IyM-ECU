@@ -11,7 +11,7 @@
 #include "cell_test.h"
 
 
-#define TEST_MODE 0
+#define TEST_MODE 1
 
 HX711 scale;
 
@@ -40,7 +40,7 @@ void setup() {
 void loop() {
   if (TEST_MODE) {
     testPot();
-    testCell();
+    testCell(scale);
     return;
   }
 
