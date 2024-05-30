@@ -6,6 +6,7 @@
 #include "pins.h"
 #include "connection.h"
 #include "accelerator.h"
+#include "break.h"
 // tests
 #include "pot_test.h"
 #include "cell_test.h"
@@ -104,6 +105,14 @@ void loop() {
   // }
 
   float acceleratorValue = getAcceleratorValue8Bits();
+  float breakValue = getBreakValuePercentage(scale);
+
+  // We consider threshold value for break being pushed around 100
+  if (breakValue > 100) {
+    ledcWrite(motorChannel, 0);
+    return;
+  }
+
   DynamicJsonDocument data(256);
   data["pot"] = acceleratorValue;
 
