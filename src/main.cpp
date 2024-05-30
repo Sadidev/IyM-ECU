@@ -11,9 +11,17 @@
 #include "cell_test.h"
 
 
-#define TEST_MODE 1
+#define TEST_MODE 0
+#define CALIBRATION_FACTOR 8483/10.4
 
 HX711 scale;
+
+unsigned long previousMillis = 0;
+const unsigned long interval = 10000; // 10000 milliseconds = 10 seconds
+
+const int freq = 5000; 
+const int motorChannel = 0; 
+const int resolution = 8;
 
 void setup() {
   // Initialize serial communication
@@ -26,7 +34,9 @@ void setup() {
   pinMode(ACCELERATOR_PIN, INPUT);
   // pinMode(TEMPERATURE_PIN, INPUT);
   // pinMode(SEATBELT_PIN, INPUT);
-  // pinMode(MOTOR_PIN, OUTPUT);
+  ledcSetup(motorChannel, freq, resolution);
+  ledcAttachPin(MOTOR_PIN, motorChannel);
+
   // pinMode(ENCODER_PIN, INPUT);
 
   // Initialize Data bus config for HX711 module
@@ -35,6 +45,40 @@ void setup() {
   rtc_clk_cpu_freq_to_config(RTC_CPU_FREQ_80M, &config);
   rtc_clk_cpu_freq_set_config_fast(&config);
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
+
+  Serial.println("Before setting up the scale:");
+  Serial.print("read: \t\t");
+  Serial.println(scale.read()); // print a raw reading from the ADC
+
+  Serial.print("read average: \t\t");
+  Serial.println(scale.read_average(20)); // print the average of 20 readings from the ADC
+
+  Serial.print("get value: \t\t");
+  Serial.println(scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight (not set yet)
+
+  Serial.print("get units: \t\t");
+  Serial.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight (not set) divided
+            // by the SCALE parameter (not set yet)
+            
+  scale.set_scale(CALIBRATION_FACTOR);
+  scale.tare(); // reset the scale to 0
+
+  Serial.println("After setting up the scale:");
+
+  Serial.print("read: \t\t");
+  Serial.println(scale.read()); // print a raw reading from the ADC
+
+  Serial.print("read average: \t\t");
+  Serial.println(scale.read_average(20)); // print the average of 20 readings from the ADC
+
+  Serial.print("get value: \t\t");
+  Serial.println(scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight, set with tare()
+
+  Serial.print("get units: \t\t");
+  Serial.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight, divided
+            // by the SCALE parameter set with set_scale
+
+  previousMillis = millis();
 }
 
 void loop() {
@@ -43,7 +87,7 @@ void loop() {
     testCell(scale);
     return;
   }
-
+  unsigned long currentMillis = millis();
   checkMQTTConnection();
 
   // float motorSpeed = analogRead(ENCODER_PIN);
@@ -63,7 +107,15 @@ void loop() {
   DynamicJsonDocument data(256);
   data["pot"] = acceleratorValue;
 
-  publishTelemetry(data);
-  // analogWrite(MOTOR_PIN, acceleratorValue);
-  delay(1000);
+  if (currentMillis - previousMillis >= interval) {
+    publishTelemetry(data);
+
+    // Update previousMillis to the current time
+    previousMillis = currentMillis;
+  }
+  
+  uint32_t dutyCycle = (uint32_t)acceleratorValue; // Convert to uint32_t
+
+  ledcWrite(motorChannel, dutyCycle);
+  
 }
