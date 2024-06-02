@@ -17,8 +17,8 @@
 
 HX711 scale;
 
-unsigned long previousMillis = 0;
-const unsigned long interval = 10000; // 10000 milliseconds = 10 seconds
+unsigned long previousPostTimestamp = 0;
+const unsigned long postInterval = 10000; // 10000 milliseconds = 10 seconds
 
 const int freq = 5000; 
 const int motorChannel = 0; 
@@ -79,7 +79,7 @@ void setup() {
   Serial.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight, divided
             // by the SCALE parameter set with set_scale
 
-  previousMillis = millis();
+  previousPostTimestamp = millis();
 }
 
 void loop() {
@@ -88,7 +88,7 @@ void loop() {
     testCell(scale);
     return;
   }
-  unsigned long currentMillis = millis();
+  unsigned long currentTimestamp = millis();
   checkMQTTConnection();
 
   // float motorSpeed = analogRead(ENCODER_PIN);
@@ -112,19 +112,14 @@ void loop() {
     ledcWrite(motorChannel, 0);
     return;
   }
-
-  DynamicJsonDocument data(256);
-  data["pot"] = acceleratorValue;
-
-  if (currentMillis - previousMillis >= interval) {
-    publishTelemetry(data);
-
-    // Update previousMillis to the current time
-    previousMillis = currentMillis;
-  }
   
   uint32_t dutyCycle = (uint32_t)acceleratorValue; // Convert to uint32_t
 
   ledcWrite(motorChannel, dutyCycle);
+
+  DynamicJsonDocument data(256);
+  data["pot"] = acceleratorValue;
+
+  publishTelemetry(data);
   
 }
