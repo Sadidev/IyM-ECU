@@ -7,6 +7,7 @@
 #include "connection.h"
 #include "accelerator.h"
 #include "break.h"
+#include "encoder.h"
 // tests
 #include "pot_test.h"
 #include "cell_test.h"
@@ -34,11 +35,12 @@ void setup() {
   // Initialize pins
   pinMode(ACCELERATOR_PIN, INPUT);
   // pinMode(TEMPERATURE_PIN, INPUT);
-  // pinMode(SEATBELT_PIN, INPUT);
+  pinMode(SEATBELT_PIN, INPUT);
   ledcSetup(motorChannel, freq, resolution);
   ledcAttachPin(MOTOR_PIN, motorChannel);
 
-  // pinMode(ENCODER_PIN, INPUT);
+  pinMode(ENCODER_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), countPulses, RISING);
 
   // Initialize Data bus config for HX711 module
   rtc_cpu_freq_config_t config;
@@ -91,24 +93,33 @@ void loop() {
   unsigned long currentTimestamp = millis();
   checkMQTTConnection();
 
-  // float motorSpeed = analogRead(ENCODER_PIN);
+  float motorSpeed = getEncoderToRPM();
 
-  // bool isSeatbeltOn = digitalRead(SEATBELT_PIN);
+  int isSeatbeltOn = digitalRead(SEATBELT_PIN);
+  Serial.print("isSeatbeltOn: ");
+  Serial.println(isSeatbeltOn);
 
-  // if (!isSeatbeltOn && motorSpeed < 0.1) {
-  //   return;
-  // }
 
   // if (!isSeatbeltOn && motorSpeed > 0.1) {
   //   //displayAlarm();
-  //   //sendAlarm();
+  //   sendAlarm();
+  // }
+
+  DynamicJsonDocument data(1024);
+  data["speed"] = motorSpeed;
+  // data["seatbelt_status"] = isSeatbeltOn;
+
+  publishTelemetry(data);
+
+  // if (isSeatbeltOn == 0 && motorSpeed < 0.1) {
+  //   return;
   // }
 
   float acceleratorValue = getAcceleratorValue8Bits();
   float breakValue = getBreakValuePercentage(scale);
 
   // We consider threshold value for break being pushed around 100
-  if (breakValue > 100) {
+  if (breakValue > 10) {
     ledcWrite(motorChannel, 0);
     return;
   }
@@ -116,10 +127,4 @@ void loop() {
   uint32_t dutyCycle = (uint32_t)acceleratorValue; // Convert to uint32_t
 
   ledcWrite(motorChannel, dutyCycle);
-
-  DynamicJsonDocument data(256);
-  data["pot"] = acceleratorValue;
-
-  publishTelemetry(data);
-  
 }
