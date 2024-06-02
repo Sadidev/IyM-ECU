@@ -107,16 +107,17 @@ void loop() {
 
   DynamicJsonDocument data(1024);
   data["speed"] = motorSpeed;
-  // data["seatbelt_status"] = isSeatbeltOn;
+  data["seatbelt_status"] = isSeatbeltOn;
 
   publishTelemetry(data);
 
-  // if (isSeatbeltOn == 0 && motorSpeed < 0.1) {
-  //   return;
-  // }
-
   float acceleratorValue = getAcceleratorValue8Bits();
   float breakValue = getBreakValuePercentage(scale);
+
+  if (isSeatbeltOn == LOW && motorSpeed < 0.1) {
+    Serial.println("Esta Low");
+    return;
+  }
 
   // We consider threshold value for break being pushed around 100
   if (breakValue > 10) {
