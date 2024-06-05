@@ -16,6 +16,7 @@ float getTemperatureValue() {
 
 uint32_t processAcceleratorValue(float acceleratorValue, float temperatureValue) {
     volatile float processedValue = acceleratorValue;
+    const float maxPWMValue = 255.0;
    
     if (temperatureValue >= 20 && temperatureValue < 35) {
         processedValue = (processedValue * 1.2);
@@ -25,5 +26,10 @@ uint32_t processAcceleratorValue(float acceleratorValue, float temperatureValue)
         processedValue = (processedValue * 1.1);
     }
 
-    return (uint32_t)processedValue;
+    float finalProcessedValue = min(static_cast<float>(processedValue), static_cast<float>(maxPWMValue)); // Cast both values as float
+    
+    Serial.print("FinalProcessedValue: ");
+    Serial.println(finalProcessedValue);
+
+    return (uint32_t)finalProcessedValue;
 }
