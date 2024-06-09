@@ -6,8 +6,9 @@
 #define LOADCELL_DOUT_PIN 3
 #define LOADCELL_SCK_PIN 22
 #define MOTOR_PIN 13
-#define TEMPERATURE_PIN 4
 #define SEATBELT_PIN 27
 #define ENCODER_PIN 35
+#define BREAK_PIN 5
+#define TEMPERATURE_PIN 32
 
 #endif // PINS_H
