@@ -19,7 +19,7 @@ void countPulses() {
 float getEncoderToRPM() {
     unsigned long currentTime = millis();
   
-    if (currentTime - lastTime >= 100) { // Cada segundo
+    if (currentTime - lastTime >= 100) { // Cada 100 ms
         int currentPulseCount;
         
         // Entrar en sección crítica
