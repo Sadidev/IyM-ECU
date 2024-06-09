@@ -4,7 +4,7 @@
 
 volatile int pulseCount = 0;
 unsigned long lastTime = 0;
-float rpm = 0;
+volatile float rpm = 0;
 
 // Parámetros del encoder y motor
 const float hallResolution = 11.0; // Resolución de Hall
@@ -19,14 +19,14 @@ void countPulses() {
 float getEncoderToRPM() {
     unsigned long currentTime = millis();
   
-    if (currentTime - lastTime >= 1000) { // Cada segundo
+    if (currentTime - lastTime >= 100) { // Cada segundo
         int currentPulseCount;
         
         // Entrar en sección crítica
-        detachInterrupt(digitalPinToInterrupt(ENCODER_PIN)); // Detener la interrupción para cálculo seguro
+        noInterrupts();
         currentPulseCount = pulseCount;
         pulseCount = 0; // Resetear contador
-        attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), countPulses, RISING); // Reiniciar la interrupción
+        interrupts(); // Reiniciar la configuracion
         
         // Calcular RPM
         float revolutions = (currentPulseCount / ppr) * reducerReductionRatio * 100;
@@ -39,6 +39,7 @@ float getEncoderToRPM() {
         // Actualizar el tiempo
         lastTime = currentTime;
 
-        return rpm;
     }
+
+    return rpm;
 }
