@@ -6,7 +6,7 @@
 
 float getTemperatureValue() {
     float initialValue = analogRead(TEMPERATURE_PIN);
-    float convertedValue = initialValue * (TEMP_MAX_VALUE_CELSIUS/4095.0);
+    float convertedValue = initialValue * (TEMP_MAX_VALUE_CELSIUS/3102.0); // Usamos este valor y no 4095 ya que el amplificador envia 2.5 para tener un margen de seguridad
     
     Serial.print("Temp: ");
     Serial.println(convertedValue);
