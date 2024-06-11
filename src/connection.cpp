@@ -55,7 +55,7 @@ void publishTelemetry(DynamicJsonDocument data) {
         return;
     }
 
-    char buffer[1024];
+    char buffer[256];
     serializeJson(data, buffer);
     client.publish(TELEMETRY_ROUTE, buffer);
 
