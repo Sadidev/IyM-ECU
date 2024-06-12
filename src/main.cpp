@@ -8,6 +8,7 @@
 #include "accelerator.h"
 #include "break.h"
 #include "encoder.h"
+#include "temperature.h"
 // tests
 #include "pot_test.h"
 #include "cell_test.h"
@@ -23,6 +24,7 @@ const unsigned long postInterval = 10000; // 10000 milliseconds = 10 seconds
 
 const int freq = 5000; 
 const int motorChannel = 0; 
+const int breakChannel = 1;
 const int resolution = 8;
 
 void setup() {
@@ -34,10 +36,14 @@ void setup() {
 
   // Initialize pins
   pinMode(ACCELERATOR_PIN, INPUT);
-  // pinMode(TEMPERATURE_PIN, INPUT);
-  pinMode(SEATBELT_PIN, INPUT);
+  pinMode(TEMPERATURE_PIN, INPUT);
+  pinMode(SEATBELT_PIN, INPUT_PULLUP);
+
   ledcSetup(motorChannel, freq, resolution);
   ledcAttachPin(MOTOR_PIN, motorChannel);
+
+  ledcSetup(breakChannel, freq, resolution);
+  ledcAttachPin(BREAK_PIN, breakChannel);
 
   pinMode(ENCODER_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), countPulses, RISING);
@@ -105,14 +111,16 @@ void loop() {
   //   sendAlarm();
   // }
 
-  DynamicJsonDocument data(1024);
+  float acceleratorValue = getAcceleratorValue8Bits();
+  float breakValuePercentage = getBreakValuePercentage(scale);
+  float temperatureValue = getTemperatureValue();
+
+  DynamicJsonDocument data(256);
   data["speed"] = motorSpeed;
   data["seatbelt_status"] = isSeatbeltOn;
+  data["temp"] = temperatureValue;
 
   publishTelemetry(data);
-
-  float acceleratorValue = getAcceleratorValue8Bits();
-  float breakValue = getBreakValuePercentage(scale);
 
   if (isSeatbeltOn == LOW && motorSpeed < 0.1) {
     Serial.println("Esta Low");
@@ -120,12 +128,15 @@ void loop() {
   }
 
   // We consider threshold value for break being pushed around 100
-  if (breakValue > 10) {
+  if (breakValuePercentage > 10) {
+    uint32_t breakValue8Bits = (u_int32_t)(breakValuePercentage * 255);
+
     ledcWrite(motorChannel, 0);
+    ledcWrite(breakChannel, breakValue8Bits);
     return;
   }
   
-  uint32_t dutyCycle = (uint32_t)acceleratorValue; // Convert to uint32_t
-
+  uint32_t dutyCycle =  processAcceleratorValue(acceleratorValue, temperatureValue); // Convert to uint32_t
   ledcWrite(motorChannel, dutyCycle);
+  ledcWrite(breakChannel, 0);
 }
