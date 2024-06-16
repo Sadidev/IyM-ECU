@@ -48,6 +48,8 @@ void setup() {
   pinMode(ENCODER_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), countPulses, RISING);
 
+  pinMode(LED_PIN, OUTPUT);
+
   // Initialize Data bus config for HX711 module
   rtc_cpu_freq_config_t config;
   rtc_clk_cpu_freq_get_config(&config);
@@ -106,11 +108,6 @@ void loop() {
   Serial.println(isSeatbeltOn);
 
 
-  // if (!isSeatbeltOn && motorSpeed > 0.1) {
-  //   //displayAlarm();
-  //   sendAlarm();
-  // }
-
   float acceleratorValue = getAcceleratorValue8Bits();
   float breakValuePercentage = getBreakValuePercentage(scale);
   float temperatureValue = getTemperatureValue();
@@ -125,18 +122,23 @@ void loop() {
   if (isSeatbeltOn == LOW && motorSpeed < 0.1) {
     Serial.println("Esta Low");
     return;
+  } else if (isSeatbeltOn == LOW && motorSpeed > 0.1) {
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
   }
+
 
   // We consider threshold value for break being pushed around 100
   if (breakValuePercentage > 10) {
     uint32_t breakValue8Bits = (u_int32_t)(breakValuePercentage * 255);
 
     ledcWrite(motorChannel, 0);
-    ledcWrite(breakChannel, breakValue8Bits);
+    // ledcWrite(breakChannel, breakValue8Bits);
     return;
   }
   
   uint32_t dutyCycle =  processAcceleratorValue(acceleratorValue, temperatureValue); // Convert to uint32_t
   ledcWrite(motorChannel, dutyCycle);
-  ledcWrite(breakChannel, 0);
+  // ledcWrite(breakChannel, 0);
 }

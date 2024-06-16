@@ -10,5 +10,5 @@
 #define ENCODER_PIN 35
 #define BREAK_PIN 14
 #define TEMPERATURE_PIN 32
-
+#define LED_PIN 33
 #endif // PINS_H
